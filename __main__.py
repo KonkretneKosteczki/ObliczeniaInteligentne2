@@ -1,21 +1,33 @@
+# results will be directly affected by batch_size, keep_prob, learning_rate, training_epochs,
+# indirectly: amount and characteristics of layers (network architecture), size of dataset,
+#  criterion adn optimizer functions
+
 import torch
 from display import display_results
 from torch.autograd import Variable
 import torchvision.datasets as dsets
 import torchvision.transforms as transforms
 import torch.nn.init
+from timeit import default_timer as timer
 
-torch.manual_seed(777)  # reproducibility
+torch.set_default_tensor_type('torch.cuda.FloatTensor')
+torch.cuda.manual_seed(2)  # 1 93.37%
 
 # hyper-parameters
 batch_size = 32
 keep_prob = 1  # 0.7  # reduce overfitting
 
+
+def transform_to_gpu_tensor(pic):
+    return transforms.ToTensor()(pic).cuda()
+
+
+# if __name__ == '__main__':
+#     torch.multiprocessing.freeze_support()
+
 # MNIST dataset
-mnist_train = dsets.MNIST(root='MNIST_data/', train=True, transform=transforms.ToTensor(), download=True)
-mnist_test = dsets.MNIST(root='MNIST_data/', train=False, transform=transforms.ToTensor(), download=True)
-# dataset loader
-data_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True)
+mnist_train = dsets.MNIST(root='MNIST_data/', train=True, transform=transform_to_gpu_tensor, download=True)
+mnist_test = dsets.MNIST(root='MNIST_data/', train=False, transform=transform_to_gpu_tensor, download=True)
 
 # Display informations about the dataset
 print('The training dataset:\t', mnist_train)
@@ -25,7 +37,6 @@ print('\nThe testing dataset:\t', mnist_test)
 # Implementation of CNN/ConvNet Model using PyTorch (depicted in the picture above)
 
 class CNN(torch.nn.Module):
-
     def __init__(self):
         super(CNN, self).__init__()
         # L1 ImgIn shape=(?, 28, 28, 1)
@@ -55,7 +66,7 @@ class CNN(torch.nn.Module):
 
         # L4 FC 4x4x128 inputs -> 625 outputs
         self.fc1 = torch.nn.Linear(4 * 4 * 128, 625, bias=True)
-        torch.nn.init.xavier_uniform(self.fc1.weight)
+        torch.nn.init.xavier_uniform_(self.fc1.weight)
         self.layer4 = torch.nn.Sequential(
             self.fc1,
             torch.nn.ReLU(),
@@ -76,7 +87,7 @@ class CNN(torch.nn.Module):
 
 # instantiate CNN model
 model = CNN()
-model
+model.cuda()
 
 for param in model.parameters():
     print(param.size())
@@ -89,8 +100,8 @@ print('Training the Deep Learning network ...')
 train_cost = []
 train_accu = []
 
-training_epochs = 15
-total_batch = len(mnist_train) // batch_size
+training_epochs = 25
+total_batch = len(mnist_train) // batch_size  # int division
 
 print('Size of the training dataset is {}'.format(mnist_train.data.size()))
 print('Size of the testing dataset'.format(mnist_test.data.size()))
@@ -98,8 +109,14 @@ print('Batch size is : {}'.format(batch_size))
 print('Total number of batches is : {0:2.0f}'.format(total_batch))
 print('\nTotal number of epochs is : {0:2.0f}'.format(training_epochs))
 
+# dataset loader
+data_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True)
+# data_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True)
+
+training_start = timer()
 for epoch in range(training_epochs):
     avg_cost = 0
+    start = timer()
     for i, (batch_X, batch_Y) in enumerate(data_loader):
         X = Variable(batch_X)  # image is already size of (28x28), no reshape
         Y = Variable(batch_Y)  # label is not one-hot encoded
@@ -124,43 +141,34 @@ for epoch in range(training_epochs):
 
         avg_cost += cost.data / total_batch
 
-    print("[Epoch: {:>4}], averaged cost = {:>.9}".format(epoch + 1, avg_cost.item()))
+    end = timer()
+    print(
+        "[Epoch: {:>4}], averaged cost = {:>.9}, time spent = {}s".format(epoch + 1, avg_cost.item(), end - start))
 
-print('Learning Finished!')
-# _, argmax = torch.max(outputs, 1)
-# accuracy = (labels == argmax.squeeze()).float().mean()
-
-from matplotlib import pylab as plt
-import numpy as np
-
-plt.figure(figsize=(20, 10))
-plt.subplot(121), plt.plot(np.arange(len(train_cost)), train_cost), plt.ylim([0, 10])
-plt.subplot(122), plt.plot(np.arange(len(train_accu)), 100 * torch.as_tensor(train_accu).numpy()), plt.ylim([0, 100])
-# cost.item?
+print('Learning Finished! time spent = {}s'.format(timer() - training_start))
 
 # Test model and check accuracy
 model.eval()  # set the model to evaluation mode (dropout=False)
 
-X_test = Variable(mnist_test.data.view(len(mnist_test), 1, 28, 28).float())
-Y_test = Variable(mnist_test.targets)
+## train accuracy
+import statistics
 
+X_train = Variable(mnist_train.data.view(len(mnist_train), 1, 28, 28).float())
+Y_train = Variable(mnist_train.targets)
+total_train_accuracy = []
+for x, y in zip(X_train.split(100), Y_train.split(100)):
+    train_prediction = model(x.cuda())
+    correct_train_prediction = (torch.max(train_prediction.data, dim=1)[1] == y.cuda().data)
+    train_accuracy = correct_train_prediction.float().mean().item()
+    total_train_accuracy.append(train_accuracy)
+print('\nTrain set accuracy: {:2.2f} %'.format(statistics.mean(total_train_accuracy) * 100))
+
+# test accuracy
+X_test = Variable(mnist_test.data.view(len(mnist_test), 1, 28, 28).float()).cuda()
+Y_test = Variable(mnist_test.targets).cuda()
 prediction = model(X_test)
-
-# Compute accuracy
 correct_prediction = (torch.max(prediction.data, dim=1)[1] == Y_test.data)
 accuracy = correct_prediction.float().mean().item()
-print('\nAccuracy: {:2.2f} %'.format(accuracy * 100))
+print('\nTest set accuracy: {:2.2f} %'.format(accuracy * 100))
 
-
-
-display_results(X_test, prediction)
-# plt.figure(figsize=(15, 15), facecolor='white')
-# val, idx = torch.max(prediction, dim=1)
-# for i in torch.arange(0, 12):
-#     plt.subplot(4, 4, i + 1)
-#     plt.imshow(X_test[i][0])
-#     plt.title('This image contains: {0:>2} '.format(idx[i].item()))
-#     plt.xticks([]), plt.yticks([])
-#     plt.plt.subplots_adjust()
-#
-# plt.show()
+display_results(X_test, Y_test, prediction, train_cost, train_accu)
