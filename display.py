@@ -12,7 +12,7 @@ def display_results(mnist_test, X_test, prediction):
         for i in torch.arange(0, 12):
             plt.subplot(4, 4, i + 1)
             plt.imshow(X_test[img_batch * 12 + i][0])
-            plt.title('This image contains: {0:>2} '.format(idx[i].item()))
+            plt.title('{0:>2}'.format(idx[img_batch * 12 + i].item()))
             plt.xticks([]), plt.yticks([])
             plt.plt.subplots_adjust()
         plt.draw()
