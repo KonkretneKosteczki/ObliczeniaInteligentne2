@@ -1,8 +1,10 @@
 import torch
+from torch import Tensor
 
 
+# Implementation of CNN/ConvNet Model using PyTorch
 class CNN(torch.nn.Module):
-    def __init__(self, keep_prob):
+    def __init__(self, keep_prob: float):
         super(CNN, self).__init__()
         # L1 ImgIn shape=(?, 28, 28, 1)
         #    Conv     -> (?, 28, 28, 32)
@@ -40,7 +42,7 @@ class CNN(torch.nn.Module):
         self.fc2 = torch.nn.Linear(625, 10, bias=True)
         torch.nn.init.xavier_uniform_(self.fc2.weight)  # initialize parameters
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         out = self.layer1(x)
         out = self.layer2(out)
         out = self.layer3(out)

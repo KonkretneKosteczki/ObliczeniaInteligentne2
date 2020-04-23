@@ -1,21 +1,18 @@
-# dataset loader
-import torch
 from timeit import default_timer as timer
-from torch.autograd import Variable
+from typing import Tuple, List
 
+import torch
+from torch import Tensor
+from torch.autograd import Variable
 
 criterion = torch.nn.CrossEntropyLoss()  # Softmax is internally computed. The cross-entropy cost function
 
 
-def train(mnist_train, batch_size, training_epochs, learning_rate, model):
-    total_batch = len(mnist_train) // batch_size  # int division
-    print('Size of the training dataset is {}'.format(mnist_train.data.size()))
-    print('Batch size is : {}'.format(batch_size))
-    print('Total number of batches is : {0:2.0f}'.format(total_batch))
-    print('\nTotal number of epochs is : {0:2.0f}'.format(training_epochs))
+def train(mnist_train, batch_size, training_epochs, learning_rate, total_batch, model) -> Tuple[List[float], List[float]]:
+    print('\nTraining the Deep Learning network ...')
 
-    train_accu = []
-    train_cost = []
+    train_accu: [float] = []
+    train_cost: [float] = []
     optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
 
     # issues on windows with multiple workers, as project was developed on ubuntu
@@ -27,8 +24,8 @@ def train(mnist_train, batch_size, training_epochs, learning_rate, model):
         avg_cost = 0
         start = timer()
         for i, (batch_X, batch_Y) in enumerate(data_loader):
-            X = Variable(batch_X)  # image is already size of (28x28), no reshape
-            Y = Variable(batch_Y)  # label is not one-hot encoded
+            X: Tensor = Variable(batch_X)  # image is already size of (28x28), no reshape
+            Y: Tensor = Variable(batch_Y)  # label is not one-hot encoded
 
             optimizer.zero_grad()  # <= initialization of the gradients
 
@@ -49,8 +46,11 @@ def train(mnist_train, batch_size, training_epochs, learning_rate, model):
                                                                                           train_accu[-1]))
 
             avg_cost += cost.data / total_batch
+            del X, Y, prediction, hypothesis
 
         end = timer()
         print(
             "[Epoch: {:>4}], averaged cost = {:>.9}, time spent = {}s".format(epoch + 1, avg_cost.item(), end - start))
+
+    print('Learning Finished! time spent = {}s'.format(timer() - training_start))
     return train_cost, train_accu
