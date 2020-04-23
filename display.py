@@ -14,11 +14,13 @@ def display_results(X_test, Y_test, prediction, train_cost, train_accu):
     val, idx = torch.max(prediction, dim=1)
 
     def draw():
-        for i in torch.arange(0, 12):
-            index = img_batch * 12 + i
+        for i in torch.arange(0, 16):
+            index = img_batch * 16 + i
             plt.subplot(4, 4, i + 1)
             plt.imshow(X_test[index][0].cpu())
-            plt.title('P:{0:>2} R:{0:>2}'.format(idx[index].item(), Y_test.data()[index].item()))
+            predicted = idx[index].item()
+            real = Y_test.data[index].item()
+            plt.title('P:{} R:{}'.format(predicted, real), color="k" if predicted == real else "r")
             plt.xticks([]), plt.yticks([])
             plt.plt.subplots_adjust()
         plt.draw()

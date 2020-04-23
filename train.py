@@ -7,13 +7,20 @@ from torch.autograd import Variable
 criterion = torch.nn.CrossEntropyLoss()  # Softmax is internally computed. The cross-entropy cost function
 
 
-def train(mnist_train, batch_size, training_epochs, learning_rate, total_batch, model):
+def train(mnist_train, batch_size, training_epochs, learning_rate, model):
+    total_batch = len(mnist_train) // batch_size  # int division
+    print('Size of the training dataset is {}'.format(mnist_train.data.size()))
+    print('Batch size is : {}'.format(batch_size))
+    print('Total number of batches is : {0:2.0f}'.format(total_batch))
+    print('\nTotal number of epochs is : {0:2.0f}'.format(training_epochs))
+
     train_accu = []
     train_cost = []
     optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
 
-    data_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True, num_workers=8)
-    # data_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True)
+    # issues on windows with multiple workers, as project was developed on ubuntu
+    # data_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True, num_workers=2)
+    data_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True)
 
     training_start = timer()
     for epoch in range(training_epochs):
@@ -46,3 +53,4 @@ def train(mnist_train, batch_size, training_epochs, learning_rate, total_batch, 
         end = timer()
         print(
             "[Epoch: {:>4}], averaged cost = {:>.9}, time spent = {}s".format(epoch + 1, avg_cost.item(), end - start))
+    return train_cost, train_accu
