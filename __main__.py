@@ -153,7 +153,7 @@ print('\nAccuracy: {:2.2f} %'.format(accuracy * 100))
 
 
 
-display_results(mnist_test, X_test, prediction)
+display_results(X_test, prediction)
 # plt.figure(figsize=(15, 15), facecolor='white')
 # val, idx = torch.max(prediction, dim=1)
 # for i in torch.arange(0, 12):

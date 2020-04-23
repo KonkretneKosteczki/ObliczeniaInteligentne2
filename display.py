@@ -5,7 +5,7 @@ fig, ax = plt.subplots()
 img_batch = 0
 
 
-def display_results(mnist_test, X_test, prediction):
+def display_results(X_test, prediction):
     val, idx = torch.max(prediction, dim=1)
 
     def draw():
