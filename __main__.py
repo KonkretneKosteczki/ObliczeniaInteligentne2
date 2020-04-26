@@ -2,26 +2,24 @@
 # indirectly: amount and characteristics of layers (network architecture), size of dataset,
 #  criterion adn optimizer functions
 
-from typing import Tuple, Any
+from typing import Tuple
 
 import torch.nn.init
 import torchvision.datasets as dsets
 import torchvision.transforms as transforms
 from PIL import Image
+from torch import Tensor
 from torchvision.datasets import MNIST
 
 from display import display_results
 from network import CNN
-from train import train
 from test import test_model
+from train import train
 
+# arbitrarily chosen seed value
+torch.manual_seed(1)
+torch.cuda.manual_seed(1)
 torch.set_default_tensor_type('torch.cuda.FloatTensor')
-torch.cuda.manual_seed(2)  # arbitrarily chosen seed value
-# Training data
-# Set accuracy: 84.27 %
-#
-# Testing data
-# Set accuracy: 83.65 %
 
 # hyper-parameters
 batch_size: int = 32
@@ -31,7 +29,7 @@ learning_rate: float = 0.001
 training_epochs: int = 10
 
 
-def transform_to_gpu_tensor(pic: Image):
+def transform_to_gpu_tensor(pic: Image) -> Tensor:
     return transforms.ToTensor()(pic).cuda()
 
 
@@ -73,8 +71,9 @@ model.eval()  # set the model to evaluation mode (dropout=False)
 
 print("\nTraining data")
 torch.cuda.empty_cache()
-test_model(model, mnist_train, True, 100)
+test_model(model, mnist_train, 100)
 
 print("\nTesting data")
-x_data, y_data, pre = test_model(model, mnist_test, True, 100)
-display_results(x_data, y_data, pre, train_cost, train_accu)
+test_model(model, mnist_test, 100)
+display_results(model, mnist_test, train_cost, train_accu)
+torch.save(model.state_dict(), "custom.pth")

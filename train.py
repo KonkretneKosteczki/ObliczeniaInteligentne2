@@ -13,7 +13,8 @@ def train(mnist_train, batch_size, training_epochs, learning_rate, total_batch, 
 
     train_accu: [float] = []
     train_cost: [float] = []
-    optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
+    parameters = filter(lambda p: p.requires_grad, model.parameters())
+    optimizer = torch.optim.Adam(params=parameters, lr=learning_rate)
 
     # issues on windows with multiple workers, as project was developed on ubuntu
     # data_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True, num_workers=2)
@@ -24,8 +25,8 @@ def train(mnist_train, batch_size, training_epochs, learning_rate, total_batch, 
         avg_cost = 0
         start = timer()
         for i, (batch_X, batch_Y) in enumerate(data_loader):
-            X: Tensor = Variable(batch_X)  # image is already size of (28x28), no reshape
-            Y: Tensor = Variable(batch_Y)  # label is not one-hot encoded
+            X: Tensor = Variable(batch_X.cuda())  # image is already size of (28x28), no reshape
+            Y: Tensor = Variable(batch_Y.cuda())  # label is not one-hot encoded
 
             optimizer.zero_grad()  # <= initialization of the gradients
 
