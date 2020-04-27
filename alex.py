@@ -5,7 +5,7 @@ import torchvision.transforms as transforms
 from PIL import Image
 from torch import Tensor
 
-from display import display_results
+from display import display_results, display_confusion_matrix, display_cost_and_accuracy
 from test import test_model
 from train import train
 
@@ -51,6 +51,8 @@ total_batch: int = len(train_dataset) // batch_size
 train_cost, train_accu = train(train_dataset, batch_size, epochs, learning_rate, total_batch, model)
 
 print("\nTesting data")
-test_model(model, test_dataset, batch_size)
-display_results(model, test_dataset, train_cost, train_accu)
+confusion_matrix = test_model(model, test_dataset, batch_size)
+display_results(model, test_dataset)
+display_cost_and_accuracy(train_cost, train_accu)
+display_confusion_matrix(confusion_matrix)
 torch.save(model.state_dict(), "alex.pth")

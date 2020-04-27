@@ -11,7 +11,7 @@ from PIL import Image
 from torch import Tensor
 from torchvision.datasets import MNIST
 
-from display import display_results
+from display import display_results, display_confusion_matrix, display_cost_and_accuracy
 from network import CNN
 from test import test_model
 from train import train
@@ -26,7 +26,7 @@ batch_size: int = 32
 keep_prob: float = 1.0  # 0.7  # reduce overfitting
 
 learning_rate: float = 0.001
-training_epochs: int = 10
+training_epochs: int = 1
 
 
 def transform_to_gpu_tensor(pic: Image) -> Tensor:
@@ -69,11 +69,14 @@ train_cost, train_accu = train(mnist_train, batch_size, training_epochs, learnin
 # Test model and check accuracy
 model.eval()  # set the model to evaluation mode (dropout=False)
 
-print("\nTraining data")
-torch.cuda.empty_cache()
-test_model(model, mnist_train, 100)
+# print("\nTraining data")
+# torch.cuda.empty_cache()
+# test_model(model, mnist_train, 100)
 
 print("\nTesting data")
-test_model(model, mnist_test, 100)
-display_results(model, mnist_test, train_cost, train_accu)
+confusion_matrix = test_model(model, mnist_test, 100)
+display_results(model, mnist_test)
+display_cost_and_accuracy(train_cost, train_accu)
+display_confusion_matrix(confusion_matrix)
 torch.save(model.state_dict(), "custom.pth")
+

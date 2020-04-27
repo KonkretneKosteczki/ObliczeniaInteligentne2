@@ -4,11 +4,13 @@ from typing import Tuple, List
 import torch
 from torch import Tensor
 from torch.autograd import Variable
+from torchvision.datasets import MNIST
 
 criterion = torch.nn.CrossEntropyLoss()  # Softmax is internally computed. The cross-entropy cost function
 
 
-def train(mnist_train, batch_size, training_epochs, learning_rate, total_batch, model) -> Tuple[List[float], List[float]]:
+def train(mnist_train: MNIST, batch_size: int, training_epochs: int, learning_rate: float, total_batch: int,
+          model: torch.nn.Module) -> Tuple[List[float], List[float]]:
     print('\nTraining the Deep Learning network ...')
 
     train_accu: [float] = []
