@@ -64,7 +64,7 @@ def describe_instance(network: CNN, train_data: MNIST, test_data: MNIST, total_b
 model = CNN(keep_prob)
 model.cuda()
 describe_instance(model, mnist_train, mnist_test, total_batch)
-train_cost, train_accu = train(mnist_train, batch_size, training_epochs, learning_rate, total_batch, model)
+train_cost, train_accu, model = train(mnist_train, batch_size, training_epochs, learning_rate, total_batch, model, mnist_test)
 
 # Test model and check accuracy
 model.eval()  # set the model to evaluation mode (dropout=False)
@@ -76,4 +76,3 @@ test_model(model, mnist_train, 100)
 print("\nTesting data")
 test_model(model, mnist_test, 100)
 display_results(model, mnist_test, train_cost, train_accu)
-torch.save(model.state_dict(), "custom.pth")
