@@ -48,7 +48,7 @@ for i, param in enumerate(model.parameters()):
 # list(model.parameters())[1].requires_grad = False
 
 total_batch: int = len(train_dataset) // batch_size
-train_cost, train_accu = train(train_dataset, batch_size, epochs, learning_rate, total_batch, model)
+train_cost, train_accu, model = train(train_dataset, batch_size, epochs, learning_rate, total_batch, model, test_dataset)
 
 print("\nTesting data")
 confusion_matrix = test_model(model, test_dataset, batch_size)

@@ -19,4 +19,4 @@ def test_model(model: torch.nn.Module, test_data: MNIST, test_batch_size: int = 
 
     test_accuracy: float = (1.0 - float(test_error_count) / float(len(test_data))) * 100
     print('Test accuracy: {:2.2f} %'.format(test_accuracy))
-    return confusion_matrix
+    return confusion_matrix, test_accuracy

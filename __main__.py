@@ -26,7 +26,7 @@ batch_size: int = 32
 keep_prob: float = 1.0  # 0.7  # reduce overfitting
 
 learning_rate: float = 0.001
-training_epochs: int = 1
+training_epochs: int = 10
 
 
 def transform_to_gpu_tensor(pic: Image) -> Tensor:
@@ -64,7 +64,7 @@ def describe_instance(network: CNN, train_data: MNIST, test_data: MNIST, total_b
 model = CNN(keep_prob)
 model.cuda()
 describe_instance(model, mnist_train, mnist_test, total_batch)
-train_cost, train_accu = train(mnist_train, batch_size, training_epochs, learning_rate, total_batch, model)
+train_cost, train_accu, model = train(mnist_train, batch_size, training_epochs, learning_rate, total_batch, model, mnist_test)
 
 # Test model and check accuracy
 model.eval()  # set the model to evaluation mode (dropout=False)
@@ -79,4 +79,3 @@ display_results(model, mnist_test)
 display_cost_and_accuracy(train_cost, train_accu)
 display_confusion_matrix(confusion_matrix)
 torch.save(model.state_dict(), "custom.pth")
-
