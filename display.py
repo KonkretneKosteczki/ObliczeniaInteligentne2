@@ -8,8 +8,6 @@ from matplotlib import pylab as plt
 from matplotlib.backend_bases import KeyEvent
 from torch import Tensor
 
-fig, ax = plt.subplots()
-
 
 def draw_images(data, model, device):
     loader = iter(torch.utils.data.DataLoader(data, batch_size=16))
@@ -33,21 +31,31 @@ def draw_images(data, model, device):
 
 
 def display_results(model, train_dataset, device="cuda"):
+    fig = plt.figure(figsize=(6, 7))
     draw_function = draw_images(train_dataset, model, device)
     fig.canvas.mpl_connect('key_press_event', draw_function)
     draw_function()
 
 
-def display_cost_and_accuracy(cost: List[float], acc: List[float]):
-    plt.figure()
-    plt.subplot(121), plt.plot(np.arange(len(cost)), cost), plt.ylim([0, 10])
-    plt.subplot(122), plt.plot(np.arange(len(acc)), 100 * torch.as_tensor(acc).cpu().numpy()), plt.ylim([0, 100])
+def display_cost(cost: List[List[float]]):
+    plt.figure(figsize=(10, 2))
+
+    data = list(map(sum, cost))
+    ticks = np.arange(len(data)) + 1
+
+    plt.ylim([0, data[0]])
+    plt.plot(ticks, data)
+    plt.xticks(ticks, ticks)
+    plt.title("Total cost over epochs")
+    plt.xlabel("Epochs")
+    plt.ylabel("Cost")
+    plt.show()
+
 
 
 def display_confusion_matrix(matrix: Tensor, classes: Optional[list] = None, normalize: bool = False,
-                             cmap=plt.cm.Blues) -> None:
+                             cmap=plt.cm.Blues, title: str = "Confusion Matrix") -> None:
     plt.figure()
-    title: str = "Confusion Matrix"
     if classes is None:
         classes = range(len(matrix))
 
@@ -67,6 +75,5 @@ def display_confusion_matrix(matrix: Tensor, classes: Optional[list] = None, nor
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
-    ax.xaxis.tick_top()
-    plt.show()
+    # ax.xaxis.tick_top()
 

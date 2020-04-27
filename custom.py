@@ -11,9 +11,9 @@ from PIL import Image
 from torch import Tensor
 from torchvision.datasets import MNIST
 
-from display import display_results, display_confusion_matrix, display_cost_and_accuracy
+from display import display_results, display_confusion_matrix, display_cost
 from network import CNN
-from test import test_model
+from test import test_model_matrix
 from train import train
 
 # arbitrarily chosen seed value
@@ -25,7 +25,7 @@ torch.set_default_tensor_type('torch.cuda.FloatTensor')
 batch_size: int = 32
 keep_prob: float = 1.0  # 0.7  # reduce overfitting
 
-learning_rate: float = 0.001
+learning_rate: float = 0.0001
 training_epochs: int = 10
 
 
@@ -69,13 +69,10 @@ train_cost, train_accu, model = train(mnist_train, batch_size, training_epochs, 
 # Test model and check accuracy
 model.eval()  # set the model to evaluation mode (dropout=False)
 
-# print("\nTraining data")
-# torch.cuda.empty_cache()
-# test_model(model, mnist_train, 100)
-
 print("\nTesting data")
-confusion_matrix = test_model(model, mnist_test, 100)
+test_confusion_matrix = test_model_matrix(model, mnist_test, 100)
+train_confusion_matrix = test_model_matrix(model, mnist_train, 100)
 display_results(model, mnist_test)
-display_cost_and_accuracy(train_cost, train_accu)
-display_confusion_matrix(confusion_matrix)
-torch.save(model.state_dict(), "custom.pth")
+display_confusion_matrix(test_confusion_matrix, title="Confusion Matrix (Test Data)")
+display_confusion_matrix(train_confusion_matrix, title="Confusion Matrix (Train Data)")
+display_cost(train_cost)
