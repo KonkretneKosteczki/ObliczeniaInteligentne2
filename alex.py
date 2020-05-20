@@ -1,4 +1,5 @@
 import torch
+import torchvision
 import torchvision.datasets as datasets
 import torchvision.models as models
 import torchvision.transforms as transforms
@@ -11,9 +12,9 @@ from train import train
 
 device = "cuda"
 epochs = 20
-batch_size = 128
+batch_size = 64
 learning_rate = 0.001
-model_children_to_delete = [0, 1]
+# model_children_to_delete = [0, 1]
 
 torch.manual_seed(1)
 torch.cuda.manual_seed(1)
@@ -25,18 +26,27 @@ def expand_data(*args):
 
 def transform(pic: Image) -> Tensor:
     return transforms.Compose([
-        transforms.Resize(224),
+        transforms.Resize((224, 224)),
         transforms.ToTensor(),
         expand_data
         # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
     ])(pic)
 
 
-train_dataset = datasets.MNIST(root='MNIST_data/', train=True, download=True, transform=transform)
-test_dataset = datasets.MNIST(root='MNIST_data/', train=False, transform=transform)
+def load_dataset(data_path):
+    return torchvision.datasets.ImageFolder(
+        root=data_path,
+        transform=transform
+    )
+
+
+train_dataset = load_dataset('Pneumonia/train/')
+test_dataset = load_dataset('Pneumonia/test/')
+
+print(train_dataset)
 
 model = models.alexnet(pretrained=False)
-model.classifier[6] = torch.nn.Linear(model.classifier[6].in_features, 10)
+model.classifier[6] = torch.nn.Linear(model.classifier[6].in_features, 2)
 model.to(device)
 
 
@@ -49,7 +59,7 @@ def freeze_layers(model, layer_indexes):
 
 
 # first and second fully connected layer
-freeze_layers(model, model_children_to_delete)
+# freeze_layers(model, model_children_to_delete)
 
 total_batch: int = len(train_dataset) // batch_size
 train_cost, train_accu, model = train(train_dataset, batch_size, epochs, learning_rate, total_batch, model,
@@ -58,7 +68,7 @@ train_cost, train_accu, model = train(train_dataset, batch_size, epochs, learnin
 print("\nTesting data")
 test_confusion_matrix = test_model_matrix(model, test_dataset, 100)
 train_confusion_matrix = test_model_matrix(model, train_dataset, 100)
-display_results(model, test_dataset)
+# display_results(model, test_dataset)
 display_confusion_matrix(test_confusion_matrix, title="Confusion Matrix (Test Data)")
 display_confusion_matrix(train_confusion_matrix, title="Confusion Matrix (Train Data)")
 display_cost(train_cost)

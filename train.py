@@ -1,5 +1,6 @@
 from timeit import default_timer as timer
 from typing import Tuple, List
+from torchsampler import ImbalancedDatasetSampler
 
 import torch
 from torch.autograd import Variable
@@ -11,8 +12,8 @@ from test import test_model_acc
 criterion = torch.nn.CrossEntropyLoss()  # Softmax is internally computed. The cross-entropy cost function
 
 
-def train(mnist_train: MNIST, batch_size: int, training_epochs: int, learning_rate: float, total_batch: int,
-          model: torch.nn.Module, mnist_test: MNIST) -> Tuple[List[List[float]], List[float], torch.nn.Module]:
+def train(training_dataset: MNIST, batch_size: int, training_epochs: int, learning_rate: float, total_batch: int,
+          model: torch.nn.Module, validation_dataset: MNIST) -> Tuple[List[List[float]], List[float], torch.nn.Module]:
     print('\nTraining the Deep Learning network ...')
 
     best_test_accuracy: float = 0.0
@@ -23,7 +24,8 @@ def train(mnist_train: MNIST, batch_size: int, training_epochs: int, learning_ra
 
     # issues on windows with multiple workers, as project was developed on ubuntu
     # data_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True, num_workers=2)
-    data_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True)
+    data_loader = torch.utils.data.DataLoader(dataset=training_dataset, batch_size=batch_size, shuffle=False,
+                                              sampler=ImbalancedDatasetSampler(training_dataset))
 
     training_start = timer()
     for epoch in range(training_epochs):
@@ -48,7 +50,7 @@ def train(mnist_train: MNIST, batch_size: int, training_epochs: int, learning_ra
             prediction = hypothesis.data.max(dim=1)[1]
             train_accu.append(((prediction.data == Y.data).float().mean()).item())
             train_cost[epoch].append(cost.item())
-            if i % 200 == 0:
+            if i % (total_batch // 10) == 0:
                 print("Epoch= {},\t batch = {},\t cost = {:2.4f},\t accuracy = {}".format(epoch + 1, i, train_cost[epoch][-1],
                                                                                           train_accu[-1]))
 
@@ -59,7 +61,7 @@ def train(mnist_train: MNIST, batch_size: int, training_epochs: int, learning_ra
         print(
             "[Epoch: {:>4}], averaged cost = {:>.9}, time spent = {}s".format(epoch + 1, avg_cost.item(), end - start))
 
-        test_accuracy = test_model_acc(model, mnist_test, 100)
+        test_accuracy = test_model_acc(model, validation_dataset, 100)
         if best_test_accuracy < test_accuracy:
             best_test_accuracy = test_accuracy
             save_model(model, "model.pth")
