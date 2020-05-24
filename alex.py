@@ -11,7 +11,7 @@ from test import test_model_matrix
 from train import train
 
 device = "cuda"
-epochs = 20
+epochs = 2
 batch_size = 64
 learning_rate = 0.001
 # model_children_to_delete = [0, 1]
@@ -32,16 +32,16 @@ def transform(pic: Image) -> Tensor:
         # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
     ])(pic)
 
-
 def load_dataset(data_path):
     return torchvision.datasets.ImageFolder(
         root=data_path,
-        transform=transform
+        # transform=transform
+        transform=transforms.ToTensor()
     )
 
 
-train_dataset = load_dataset('Pneumonia/train/')
-test_dataset = load_dataset('Pneumonia/test/')
+train_dataset = load_dataset('Pneumonia2/train/')
+test_dataset = load_dataset('Pneumonia2/test/')
 
 print(train_dataset)
 
