@@ -11,9 +11,9 @@ from test import test_model_matrix
 from train import train
 
 device = "cuda"
-epochs = 2
+epochs = 20
 batch_size = 64
-learning_rate = 0.001
+learning_rate = 0.0001
 # model_children_to_delete = [0, 1]
 
 torch.manual_seed(1)
@@ -46,7 +46,7 @@ test_dataset = load_dataset('Pneumonia2/test/')
 print(train_dataset)
 
 model = models.alexnet(pretrained=False)
-model.classifier[6] = torch.nn.Linear(model.classifier[6].in_features, 2)
+model.classifier[6] = torch.nn.Linear(model.classifier[6].in_features, 3)
 model.to(device)
 
 
