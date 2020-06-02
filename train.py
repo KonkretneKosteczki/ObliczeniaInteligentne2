@@ -58,14 +58,14 @@ def train(training_dataset: MNIST, batch_size: int, training_epochs: int, learni
             avg_cost += cost.data / total_batch
             del X, Y, prediction, hypothesis
 
-        end = timer()
-        print(
-            "[Epoch: {:>4}], averaged cost = {:>.9}, time spent = {}s".format(epoch + 1, avg_cost.item(), end - start))
-
         test_accuracy = test_model_acc(model, validation_dataset, 100)
         if best_test_accuracy < test_accuracy:
             best_test_accuracy = test_accuracy
             save_model(model, "model.pth")
+
+        end = timer()
+        print(
+            "[Epoch: {:>4}], averaged cost = {:>.9}, time spent = {}s, validation_accuracy = {}".format(epoch + 1, avg_cost.item(), end - start, test_accuracy))
 
     total_time = timer() - training_start
     print('Learning Finished! time spent = {}s, on average {}s per epoch'.format(total_time, total_time/training_epochs))
