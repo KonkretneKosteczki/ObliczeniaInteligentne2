@@ -9,8 +9,12 @@ from matplotlib.backend_bases import KeyEvent
 from torch import Tensor
 
 
+def get_label_dictionary(data):
+    return list(data.class_to_idx)
+
+
 def draw_images(data, model, device):
-    label_dictionary = {v: k for k, v in data.class_to_idx.items()}
+    label_dictionary = get_label_dictionary(data)
     loader = iter(torch.utils.data.DataLoader(data, batch_size=16))
 
     def draw(_: Optional[KeyEvent] = None):
