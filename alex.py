@@ -40,7 +40,7 @@ def load_dataset(data_path):
     )
 
 
-dataset_num = input("Dataset for mark 3 or 4?")
+dataset_num = input("Dataset for mark 3, 4 or 5?")
 if dataset_num == "3":
     train_dataset = load_dataset('Pneumonia1/train/')
     val_dataset = load_dataset('Pneumonia1/val')
@@ -49,15 +49,22 @@ if dataset_num == "3":
     epochs = 15
 elif dataset_num == "4":
     Pneumonia2_dataset = load_dataset('Pneumonia2/train/')
-    val_dataset = load_dataset('Pneumonia2/test')
     train_length = int(0.98 * len(Pneumonia2_dataset))
     val_length = len(Pneumonia2_dataset) - train_length
     train_dataset, val_dataset = torch.utils.data.random_split(Pneumonia2_dataset, (train_length, val_length))
     test_dataset = load_dataset('Pneumonia2/test/')
     num_classes = 3
     epochs = 20
+elif dataset_num == '5':
+    Pneumonia3_dataset = load_dataset('Pneumonia3/train/')
+    train_length = int(0.98 * len(Pneumonia3_dataset))
+    val_length = len(Pneumonia3_dataset) - train_length
+    train_dataset, val_dataset = torch.utils.data.random_split(Pneumonia3_dataset, (train_length, val_length))
+    test_dataset = load_dataset('Pneumonia3/test/')
+    num_classes = 4
+    epochs = 20
 else:
-    print("display must be either 3 or 4")
+    print("display must be either 3, 4 or 5")
     exit(1)
 
 print(train_dataset)
