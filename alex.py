@@ -11,7 +11,6 @@ from test import test_model_matrix
 from train import train
 
 device = "cuda"
-epochs = 20
 batch_size = 64
 learning_rate = 0.0001
 # model_children_to_delete = [0, 1]
@@ -40,13 +39,30 @@ def load_dataset(data_path):
     )
 
 
-train_dataset = load_dataset('Pneumonia2/train/')
-test_dataset = load_dataset('Pneumonia2/test/')
+dataset_num = input("Dataset for mark 3 or 4?")
+if dataset_num == "3":
+    train_dataset = load_dataset('Pneumonia1/train/')
+    val_dataset = load_dataset('Pneumonia1/val')
+    test_dataset = load_dataset('Pneumonia1/test/')
+    num_classes = 2
+    epochs = 15
+elif dataset_num == "4":
+    Pneumonia2_dataset = load_dataset('Pneumonia2/train/')
+    val_dataset = load_dataset('Pneumonia2/test')
+    train_length=int(0.98 * len(Pneumonia2_dataset))
+    val_length= len(Pneumonia2_dataset) - train_length
+    train_dataset,val_dataset=torch.utils.data.random_split(Pneumonia2_dataset, (train_length, val_length))
+    test_dataset = load_dataset('Pneumonia2/test/')
+    num_classes = 3
+    epochs = 20
+else:
+    print("display must be either 3 or 4")
+    exit(1)
 
 print(train_dataset)
 
 model = models.alexnet(pretrained=False)
-model.classifier[6] = torch.nn.Linear(model.classifier[6].in_features, 3)
+model.classifier[6] = torch.nn.Linear(model.classifier[6].in_features, num_classes)
 model.to(device)
 
 
@@ -63,11 +79,11 @@ def freeze_layers(model, layer_indexes):
 
 total_batch: int = len(train_dataset) // batch_size
 train_cost, train_accu, model = train(train_dataset, batch_size, epochs, learning_rate, total_batch, model,
-                                      test_dataset)
+                                      val_dataset)
 
 print("\nTesting data")
-test_confusion_matrix = test_model_matrix(model, test_dataset, 100)
-train_confusion_matrix = test_model_matrix(model, train_dataset, 100)
+test_confusion_matrix = test_model_matrix(model, test_dataset, 100, matrix_shape=num_classes)
+train_confusion_matrix = test_model_matrix(model, train_dataset, 100, matrix_shape=num_classes)
 # display_results(model, test_dataset)
 display_confusion_matrix(test_confusion_matrix, title="Confusion Matrix (Test Data)")
 display_confusion_matrix(train_confusion_matrix, title="Confusion Matrix (Train Data)")

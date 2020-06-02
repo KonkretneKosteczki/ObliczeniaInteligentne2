@@ -27,6 +27,7 @@ def train(training_dataset: MNIST, batch_size: int, training_epochs: int, learni
     data_loader = torch.utils.data.DataLoader(dataset=training_dataset, batch_size=batch_size, shuffle=False,
                                               sampler=ImbalancedDatasetSampler(training_dataset))
 
+
     training_start = timer()
     for epoch in range(training_epochs):
         avg_cost = 0

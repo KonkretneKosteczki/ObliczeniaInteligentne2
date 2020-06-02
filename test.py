@@ -18,10 +18,11 @@ def test_model_acc(model: torch.nn.Module, test_data: MNIST, test_batch_size: in
     return test_accuracy
 
 
-def test_model_matrix(model: torch.nn.Module, test_data: MNIST, test_batch_size: int = 100, device: str = "cuda") -> Tensor:
+def test_model_matrix(model: torch.nn.Module, test_data: MNIST, test_batch_size: int = 100, device: str = "cuda",
+                      matrix_shape: int = 10) -> Tensor:
     test_loader = torch.utils.data.DataLoader(test_data, batch_size=test_batch_size)
     test_error_count: int = 0
-    confusion_matrix: Tensor = torch.zeros(10, 10, dtype=torch.int64).cpu()
+    confusion_matrix: Tensor = torch.zeros(matrix_shape, matrix_shape, dtype=torch.int64).cpu()
 
     for images, labels in iter(test_loader):
         images = images.to(device)
