@@ -32,12 +32,13 @@ def transform(pic: Image, offset: [int, int]) -> Tensor:
 
 
 class CustomDataSet(torch.utils.data.Dataset):
-    def __init__(self, main_dir, transform):
+    def __init__(self, main_dir, transform, device):
         self.main_dir = main_dir
         self.transform = transform
+        self.device = device
 
         self.total_images = natsort.natsorted(os.listdir(main_dir))
-        self.labels = read_position("C:/MOO2/control_sword/data/train/out1.txt")
+        self.labels = read_position("D:/ObliczeniaInteligentne2/control_sword/data/train/out1.txt")
         self.offsets = list([self.calc_offset(self.get_last_pos(idx)) for idx in range(len(self.total_images))])
         # self.sword_positions = list([self.fill_labels(self.labels[idx], idx) for idx in range(len(self.total_images))])
 
@@ -80,12 +81,14 @@ class CustomDataSet(torch.utils.data.Dataset):
         # offset = self.calc_offset(self.get_last_pos(idx))
         sword_position = self.fill_labels(self.labels[idx], idx)
         image = Image.open(img_loc).convert("RGB")
-        tensor_image = self.transform(image, offset)
-        return {"data": tensor_image, "offset": offset, "label": Tensor(self.calc_cropped_position(sword_position, offset))}
+        tensor_image = self.transform(image, offset).to(self.device)
+        return {"data": tensor_image,
+                "offset": offset,
+                "label": Tensor(self.calc_cropped_position(sword_position, offset)).to(self.device)}
 
 
-def load_dataset(data_path):
-    return CustomDataSet(data_path, transform)
+def load_dataset(data_path, device):
+    return CustomDataSet(data_path, transform, device)
 
 
 def convert_string_position_to_int(position: str):
@@ -104,6 +107,6 @@ def read_position(file_path: str, delimiter=";"):
     return rows
 
 
-def load_data(data_path: str, batch_size: int = 32):
-    dataset = load_dataset(data_path)
+def load_data(data_path: str, batch_size: int = 32, device="cpu"):
+    dataset = load_dataset(data_path, device)
     return torch.utils.data.DataLoader(dataset, batch_size, True), len(dataset) // batch_size

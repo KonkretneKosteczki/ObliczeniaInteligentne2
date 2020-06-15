@@ -7,9 +7,10 @@ from torchvision import transforms
 from control_sword.data_loader import load_data
 import torch
 
-batch_size = 16
-epochs = 3
-learning_rate = 0.001
+batch_size = 32
+epochs = 50
+learning_rate = 0.0001
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 class Jaccard(_Loss):
@@ -39,7 +40,7 @@ def train(batch_size: int, training_epochs: int, learning_rate: float, model: to
     print('\nTraining the Deep Learning network ...')
 
     optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate)
-    loader, total_batches = load_data("C:/MOO2/control_sword/parsed", batch_size)
+    loader, total_batches = load_data("D:/ObliczeniaInteligentne2/control_sword/parsed", batch_size, device)
 
     training_start = timer()
 
@@ -74,13 +75,12 @@ def mark_sword_on_image(img: Image, sword_coordinates: [int, int, int, int], fil
 
 
 if __name__ == "__main__":
-    device = "cuda" if torch.cuda.is_available() else "cpu"
     model = models.alexnet(pretrained=False)
     model.classifier[6] = torch.nn.Linear(model.classifier[6].in_features, 4)
     model.to(device)
     train(batch_size, epochs, learning_rate, model)
 
-    test_data_loader, total_batches = load_data("C:/MOO2/control_sword/parsed", 1)
+    test_data_loader, total_batches = load_data("D:/ObliczeniaInteligentne2/control_sword/parsed", 1, device)
     # video = cv2.VideoWriter("C:/MOO2/control_sword/test.mp4", cv2.VideoWriter_fourcc(*'avc1'), 30, (224, 224))
     for batch_id, batch_data in enumerate(test_data_loader):
         # print(batch_id, batch_data)
@@ -88,7 +88,7 @@ if __name__ == "__main__":
         labels = batch_data.get("label")
         outputs = model(data)
         # print(batch_data)
-        img = transforms.ToPILImage()(data[0])
+        img = transforms.ToPILImage()(data[0].cpu())
         mark_sword_on_image(img, labels[0], (0, 255, 0))
         mark_sword_on_image(img, outputs[0], (255, 0, 255))
         # video.write(np.array(img))
