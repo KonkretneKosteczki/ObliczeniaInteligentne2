@@ -3,8 +3,9 @@ from typing import List
 
 import cv2
 
-train_data_path = "C:/MOO2/control_sword/data/train/"
-parsed_train_data_path = "C:/MOO2/control_sword/data/parsed/"
+cwd = os.getcwd()
+train_data_path = cwd + "/data/train/"
+parsed_train_data_path = cwd + "/data/parsed/"
 
 
 def parse_video_into_frames(input_path, output_path):

@@ -48,7 +48,7 @@ class WorkingDataSet(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         img_loc = os.path.join(self.main_dir, self.total_images[idx])
         image = Image.open(img_loc).convert("RGB")
-        return image
+        return transforms.ToTensor()(image)
 
 
 class TrainingDataSet(torch.utils.data.Dataset):
@@ -143,7 +143,7 @@ def read_position(file_path: str, delimiter=";"):
     return rows
 
 
-def write_position(file_path: str, rows: List[List[int, int, int, int]], delimiter=";"):
+def write_position(file_path: str, rows, delimiter=";"):
     with open(file_path) as csv_file:
         csv_writer = csv.writer(csv_file, delimiter=delimiter)
         csv_writer.writerows(rows)

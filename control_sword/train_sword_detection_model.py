@@ -17,7 +17,8 @@ batch_size = 128
 epochs = 10
 learning_rate = 0.0001
 device = get_device()
-frame_parsed_data_path = "C:/MOO2/control_sword/data/train"
+cwd = os.getcwd()
+frame_parsed_data_path = cwd + "/data/train"
 model_save_file_path = os.path.join(frame_parsed_data_path, "model.pth")
 
 
@@ -65,7 +66,7 @@ if __name__ == "__main__":
 
     test_data_loader, total_batches = load_data(frame_parsed_data_path, 1, device, shuffle=False)
     print("Output frames: {}".format(total_batches))
-    video = cv2.VideoWriter("C:/MOO2/control_sword/test.mp4", cv2.VideoWriter_fourcc(*'avc1'), 30, (224, 224))
+    video = cv2.VideoWriter(cwd + "/test.mp4", cv2.VideoWriter_fourcc(*'avc1'), 30, (224, 224))
     for batch_id, batch_data in enumerate(test_data_loader):
         if (batch_id + 1) % 100 == 0:
             print("Compiling output: Batch {}".format(batch_id + 1))
