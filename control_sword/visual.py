@@ -2,7 +2,7 @@ from PIL import ImageDraw, Image
 
 
 def draw_circle_on_image(draw, x: int, y: int, fill, radius=4):
-    draw.elipse((x - radius, y - radius, x + radius, y + radius), fill=fill)
+    draw.ellipse((x - radius, y - radius, x + radius, y + radius), fill=fill)
 
 
 def mark_sword_on_image(img: Image, sword_coordinates: [int, int, int, int], fill=(255, 0, 255)):

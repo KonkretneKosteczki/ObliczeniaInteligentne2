@@ -123,8 +123,8 @@ class TrainingDataSet(torch.utils.data.Dataset):
                 "label": Tensor(cropped_position).to(self.device)}
 
 
-def load_dataset(data_path, device, training):
-    return TrainingDataSet(data_path, transform, device, training)
+def load_dataset(data_path, device):
+    return TrainingDataSet(data_path, transform, device)
 
 
 def convert_string_position_to_int(position: str):
@@ -144,11 +144,11 @@ def read_position(file_path: str, delimiter=";"):
 
 
 def write_position(file_path: str, rows, delimiter=";"):
-    with open(file_path) as csv_file:
+    with open(file_path, 'w', newline='') as csv_file:
         csv_writer = csv.writer(csv_file, delimiter=delimiter)
         csv_writer.writerows(rows)
 
 
-def load_data(data_path: str, batch_size: int = 32, device="cpu", training=True, shuffle=True):
-    dataset = load_dataset(data_path, device, training)
+def load_data(data_path: str, batch_size: int = 32, device="cpu", shuffle=True):
+    dataset = load_dataset(data_path, device)
     return torch.utils.data.DataLoader(dataset, batch_size, shuffle=shuffle), len(dataset) // batch_size

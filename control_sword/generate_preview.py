@@ -19,11 +19,11 @@ data_loader = torch.utils.data.DataLoader(WorkingDataSet(test_file_path, device)
 labels = read_position(output_file_path)
 outputs = read_position(output_file_path)
 
-video = cv2.VideoWriter(cwd + "/test.mp4", cv2.VideoWriter_fourcc(*'avc1'), 30, (224, 224))
-for data in data_loader:
+video = cv2.VideoWriter(cwd + "/test.mp4", cv2.VideoWriter_fourcc(*'avc1'), 30, (640, 360))
+for i, data in enumerate(data_loader):
     img = transforms.ToPILImage()(data[0].cpu())
-    mark_sword_on_image(img, labels[0], (0, 255, 0))
-    mark_sword_on_image(img, outputs[0], (255, 0, 255))
+    # mark_sword_on_image(img, labels[0], (0, 255, 0))
+    mark_sword_on_image(img, outputs[i], (255, 0, 255))
     video.write(cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR))
 
 video.release()
