@@ -1,14 +1,19 @@
 import csv
 import os
 
-import natsort as natsort
 import torch
 from torchvision import transforms
 from PIL import Image
 from torch import Tensor
-from typing import Callable
+from typing import Callable, List
 
+from control_sword.util import list_directories, get_sorted_images_from_dir
+
+image_size = [640, 360]
 crop_size = [224, 224]  # appropriate dimensions for AlexNet
+
+
+# transforms.ToPILImage()(crop(img, 0, 0, 100, 100)).show()
 
 
 def transform(pic: Image, offset: [int, int]) -> Tensor:
@@ -31,17 +36,35 @@ def transform(pic: Image, offset: [int, int]) -> Tensor:
     ])(pic)
 
 
-class CustomDataSet(torch.utils.data.Dataset):
+class WorkingDataSet(torch.utils.data.Dataset):
+    def __init__(self, main_dir, device):
+        self.main_dir = main_dir
+        self.device = device
+        self.total_images = get_sorted_images_from_dir(main_dir)
+
+    def __len__(self):
+        return len(self.total_images)
+
+    def __getitem__(self, idx):
+        img_loc = os.path.join(self.main_dir, self.total_images[idx])
+        image = Image.open(img_loc).convert("RGB")
+        return image
+
+
+class TrainingDataSet(torch.utils.data.Dataset):
     def __init__(self, main_dir, transform, device):
         self.main_dir = main_dir
         self.transform = transform
         self.device = device
 
-        self.total_images = natsort.natsorted(os.listdir(main_dir))
-        self.labels = read_position("D:/ObliczeniaInteligentne2/control_sword/data/train/out1.txt")
-        self.offsets = list([self.calc_offset(self.get_last_pos(idx)) for idx in range(len(self.total_images))])
-        # self.sword_positions = list([self.fill_labels(self.labels[idx], idx) for idx in range(len(self.total_images))])
+        self.total_images = []
+        self.labels = []
 
+        for directory in list_directories(main_dir):
+            self.total_images.extend(get_sorted_images_from_dir(os.path.join(main_dir, directory)))
+            self.labels.extend(read_position(os.path.join(main_dir, "out{}.txt".format(directory))))
+
+        self.offsets = list([self.calc_offset(self.get_last_pos(idx)) for idx in range(len(self.total_images))])
         # remove partially obscured from training
         for idx, pos in reversed(list(enumerate(self.labels))):
             if "#" in pos:
@@ -67,28 +90,41 @@ class CustomDataSet(torch.utils.data.Dataset):
 
     @staticmethod
     def calc_cropped_position(position, offset):
-        offset_y = offset[1] - 112
         offset_x = offset[0] - 112
+        offset_y = offset[1] - 112
         return [position[0] - offset_x, position[1] - offset_y, position[2] - offset_x, position[3] - offset_y]
 
     @staticmethod
     def calc_offset(position: [int, int, int, int]) -> [int, int]:
-        return [(position[0] + position[2]) // 2, (position[1] + position[3]) // 2]
+        offset_x = (position[0] + position[2]) // 2
+        offset_y = (position[1] + position[3]) // 2
+
+        # corrections for out of bounds of the image cropping
+        if offset_x < 112:
+            offset_x -= (offset_x - 112)
+        elif offset_x + 112 > image_size[0]:
+            offset_x -= (offset_x + 112 - image_size[0])
+        if offset_y < 112:
+            offset_y -= (offset_y - 112)
+        elif offset_y + 112 > image_size[1]:
+            offset_y -= (offset_y + 112 - image_size[1])
+
+        return [offset_x, offset_y]
 
     def __getitem__(self, idx):
         img_loc = os.path.join(self.main_dir, self.total_images[idx])
         offset = self.offsets[idx]
-        # offset = self.calc_offset(self.get_last_pos(idx))
-        sword_position = self.fill_labels(self.labels[idx], idx)
+        sword_position = self.labels[idx]  # self.fill_labels(self.labels[idx], idx)
         image = Image.open(img_loc).convert("RGB")
+        cropped_position = self.calc_cropped_position(sword_position, offset)
         tensor_image = self.transform(image, offset).to(self.device)
         return {"data": tensor_image,
                 "offset": offset,
-                "label": Tensor(self.calc_cropped_position(sword_position, offset)).to(self.device)}
+                "label": Tensor(cropped_position).to(self.device)}
 
 
-def load_dataset(data_path, device):
-    return CustomDataSet(data_path, transform, device)
+def load_dataset(data_path, device, training):
+    return TrainingDataSet(data_path, transform, device, training)
 
 
 def convert_string_position_to_int(position: str):
@@ -107,6 +143,12 @@ def read_position(file_path: str, delimiter=";"):
     return rows
 
 
-def load_data(data_path: str, batch_size: int = 32, device="cpu"):
-    dataset = load_dataset(data_path, device)
-    return torch.utils.data.DataLoader(dataset, batch_size, True), len(dataset) // batch_size
+def write_position(file_path: str, rows: List[List[int, int, int, int]], delimiter=";"):
+    with open(file_path) as csv_file:
+        csv_writer = csv.writer(csv_file, delimiter=delimiter)
+        csv_writer.writerows(rows)
+
+
+def load_data(data_path: str, batch_size: int = 32, device="cpu", training=True, shuffle=True):
+    dataset = load_dataset(data_path, device, training)
+    return torch.utils.data.DataLoader(dataset, batch_size, shuffle=shuffle), len(dataset) // batch_size
