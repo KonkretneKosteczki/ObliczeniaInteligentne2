@@ -35,6 +35,7 @@ for idx, data in enumerate(data_loader):
     tensor_image = transform(transforms.ToPILImage()(img), offset).to(device)
     cropped_coordinates = [int(i) for i in np.rint(model(tensor_image.view(1, 3, 224, 224))[0].cpu().detach().numpy())]
 
+    # coordinates.append(cropped_coordinates)
     coordinates.append([
         cropped_coordinates[0] + offset[0] - 112,
         cropped_coordinates[1] + offset[1] - 112,
